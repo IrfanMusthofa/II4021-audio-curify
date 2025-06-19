@@ -2,6 +2,7 @@ import wave
 import numpy as np
 import base64
 
+# ===== *** Embed file into audio *** =====
 def embed_in_audio(audio_path: str, data: bytes, output_path: str):
     message = base64.b64encode(data).decode() + "###"  # end marker
     bin_message = ''.join(format(ord(char), '08b') for char in message)
@@ -20,6 +21,7 @@ def embed_in_audio(audio_path: str, data: bytes, output_path: str):
         stego_audio.setparams(params)
         stego_audio.writeframes(frames.tobytes())
 
+# ===== *** Extract file from audio *** =====
 def extract_from_audio(audio_path: str) -> bytes:
     with wave.open(audio_path, 'rb') as audio:
         frames = np.frombuffer(audio.readframes(audio.getnframes()), dtype=np.int16).copy()
@@ -36,6 +38,7 @@ def extract_from_audio(audio_path: str) -> bytes:
     message = ''.join(chars[:-3])
     return base64.b64decode(message)
 
+# ===== *** Get maximum capacity of audio *** =====
 def get_max_capacity(audio_path: str) -> int:
     with wave.open(audio_path, 'rb') as audio:
         frames = audio.readframes(audio.getnframes())

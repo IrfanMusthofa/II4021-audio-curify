@@ -5,16 +5,19 @@ import hashlib
 
 BLOCK_SIZE = 16  # AES block size
 
+# ===== *** Derive AES key from hashed string *** =====
 def get_key(key_str: str) -> bytes:
     # Hash the input key string to get a fixed-size AES key (256-bit).
     return hashlib.sha256(key_str.encode()).digest()
 
+# ===== *** Encrypt *** =====
 def encrypt(data: bytes, key_str: str) -> bytes:
     key = get_key(key_str)
     cipher = AES.new(key, AES.MODE_CBC)
     ct_bytes = cipher.encrypt(pad(data, BLOCK_SIZE))
     return base64.b64encode(bytes(cipher.iv) + ct_bytes)
 
+# ===== *** Decrypt *** =====
 def decrypt(encrypted_data: bytes, key_str: str) -> bytes:
     key = get_key(key_str)
     data = base64.b64decode(encrypted_data)
