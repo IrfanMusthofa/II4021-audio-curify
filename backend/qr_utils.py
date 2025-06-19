@@ -4,28 +4,32 @@ import qrcode.image.pil
 from PIL import Image
 import cv2
 import numpy as np
+from io import BytesIO
 
-# ===== *** Generate SHA-256 hash of audio file *** =====
-def hash_audio_file(file_path: str) -> str:
-    with open(file_path, "rb") as f:
-        file_data = f.read()
-    return hashlib.sha256(file_data).hexdigest()
+# ===== *** Generate SHA-256 hash from raw audio bytes *** =====
+def hash_audio_bytes(audio_bytes: bytes) -> str:
+    return hashlib.sha256(audio_bytes).hexdigest()
 
-# ===== *** Generate QR code from hash *** =====
-def generate_qr_from_hash(audio_path: str, output_path: str):
-    hash_val = hash_audio_file(audio_path)
+# ===== *** Generate QR code image (as BytesIO) from raw audio bytes *** =====
+def generate_qr_from_hash_image(audio_bytes: bytes) -> BytesIO:
+    hash_val = hash_audio_bytes(audio_bytes)
 
     factory = qrcode.image.pil.PilImage
     qr = qrcode.make(hash_val, image_factory=factory)
-    qr.save(output_path) 
 
-# ===== *** Verify audio hash against QR code *** =====
-def verify_audio_hash(audio_path: str, qr_path: str) -> bool:
-    audio_hash = hash_audio_file(audio_path)
-    qr = Image.open(qr_path).convert("RGB")
+    output_stream = BytesIO()
+    qr.save(output_stream, format="PNG")
+    output_stream.seek(0)
+    return output_stream
 
-    qr_img = np.array(qr)
+# ===== *** Verify audio hash against QR image bytes *** =====
+def verify_audio_hash_bytes(audio_bytes: bytes, qr_bytes: bytes) -> bool:
+    audio_hash = hash_audio_bytes(audio_bytes)
+
+    qr_img = Image.open(BytesIO(qr_bytes)).convert("RGB")
+    qr_array = np.array(qr_img)
+
     detector = cv2.QRCodeDetector()
-    val, _, _ = detector.detectAndDecode(qr_img)
+    val, _, _ = detector.detectAndDecode(qr_array)
 
     return audio_hash == val
