@@ -1,138 +1,413 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
+import type React from "react";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Upload, FileAudio, File, Key, ArrowLeft, Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { ArrowDownCircle, UploadCloud } from "lucide-react";
+import { useState, useCallback } from "react";
+import Link from "next/link";
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.15,
+            delayChildren: 0.2,
+        },
+    },
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: {
+            type: "spring",
+            stiffness: 120,
+            damping: 20,
+        },
+    },
+};
+
+interface FileUploadProps {
+    title: string;
+    description: string;
+    accept: string;
+    icon: React.ElementType;
+    file: File | null;
+    onFileSelect: (file: File | null) => void;
+    gradient: string;
+}
+
+function FileUpload({
+    title,
+    description,
+    accept,
+    icon: Icon,
+    file,
+    onFileSelect,
+    gradient,
+}: FileUploadProps) {
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    }, []);
+
+    const handleDrop = useCallback(
+        (e: React.DragEvent) => {
+            e.preventDefault();
+            setIsDragOver(false);
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                onFileSelect(files[0]);
+            }
+        },
+        [onFileSelect]
+    );
+
+    const handleFileSelect = useCallback(
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                onFileSelect(files[0]);
+            }
+        },
+        [onFileSelect]
+    );
+
+    return (
+        <motion.div
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300 }}
+        >
+            <Card className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-gray-600/50 transition-all duration-500 overflow-hidden">
+                <div
+                    className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all duration-500`}
+                />
+
+                <CardHeader className="relative">
+                    <CardTitle className="flex items-center gap-3 text-white">
+                        <motion.div
+                            className="p-2 rounded-lg bg-white/10 backdrop-blur-sm"
+                            whileHover={{ rotate: 16 }}
+                            transition={{ duration: 0 }}
+                        >
+                            <Icon className="h-5 w-5" />
+                        </motion.div>
+                        {title}
+                    </CardTitle>
+                </CardHeader>
+
+                <CardContent className="relative space-y-4">
+                    <div
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer group ${
+                            isDragOver
+                                ? "border-emerald-400/50 bg-emerald-500/10"
+                                : file
+                                ? "border-green-400/50 bg-green-500/10"
+                                : "border-gray-600/50 hover:border-gray-500/50 hover:bg-gray-800/30"
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() =>
+                            document.getElementById(`file-${title}`)?.click()
+                        }
+                    >
+                        <input
+                            id={`file-${title}`}
+                            type="file"
+                            accept={accept}
+                            onChange={handleFileSelect}
+                            className="hidden"
+                        />
+
+                        <motion.div
+                            animate={{
+                                scale: isDragOver ? 1.1 : 1,
+                                rotate: isDragOver ? 5 : 0,
+                            }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            className="space-y-4"
+                        >
+                            {file ? (
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="flex items-center justify-center"
+                                >
+                                    <Check className="h-12 w-12 text-green-400" />
+                                </motion.div>
+                            ) : (
+                                <Upload
+                                    className={`h-12 w-12 mx-auto transition-colors ${
+                                        isDragOver
+                                            ? "text-emerald-400"
+                                            : "text-gray-400 group-hover:text-gray-300"
+                                    }`}
+                                />
+                            )}
+
+                            <div>
+                                <p
+                                    className={`font-medium transition-colors ${
+                                        file ? "text-green-400" : "text-white"
+                                    }`}
+                                >
+                                    {file
+                                        ? file.name
+                                        : `Drop your ${title.toLowerCase()} here`}
+                                </p>
+                                <p className="text-sm text-gray-400 mt-1">
+                                    {file
+                                        ? `${(file.size / 1024 / 1024).toFixed(
+                                              2
+                                          )} MB`
+                                        : description}
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {file && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                        >
+                            <span className="text-sm text-gray-300 truncate">
+                                {file.name}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onFileSelect(null);
+                                }}
+                                className="text-gray-400 hover:text-white h-8 w-8 p-0"
+                            >
+                                ×
+                            </Button>
+                        </motion.div>
+                    )}
+                </CardContent>
+            </Card>
+        </motion.div>
+    );
+}
 
 export default function EmbedPage() {
     const [audioFile, setAudioFile] = useState<File | null>(null);
-    const [targetFile, setTargetFile] = useState<File | null>(null);
-    const [key, setKey] = useState("");
-    const [result, setResult] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [dataFile, setDataFile] = useState<File | null>(null);
+    const [encryptionKey, setEncryptionKey] = useState("");
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const handleEmbed = async () => {
-        if (!audioFile || !targetFile || !key) {
-            setError("All fields are required.");
+        if (!audioFile || !dataFile || !encryptionKey) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append("audio", audioFile);
-        formData.append("file", targetFile);
-        formData.append("key", key);
-
-        try {
-            setLoading(true);
-            setError(null);
-            const res = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/embed`,
-                formData,
-                {
-                    headers: { "Content-Type": "multipart/form-data" },
-                }
-            );
-            setResult(res.data);
-        } catch (err: any) {
-            setError(err?.response?.data?.error || "Embedding failed.");
-        } finally {
-            setLoading(false);
-        }
+        setIsProcessing(true);
+        // Simulate processing
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        setIsProcessing(false);
     };
 
+    const canEmbed = audioFile && dataFile && encryptionKey.length > 0;
+
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-zinc-900 text-white p-8 flex flex-col items-center justify-center gap-12">
-            <motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-4xl font-bold"
-            >
-                Embed a File into Audio
-            </motion.h1>
+        <main className="relative min-h-screen bg-black text-white overflow-hidden">
+            {/* Gradient background */}
+            <div className="absolute inset-0 -z-20">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-950" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-blue-500/10" />
+                <div className="absolute inset-0 bg-gradient-to-bl from-purple-500/5 via-transparent to-pink-500/10" />
+                <motion.div
+                    animate={{
+                        background: [
+                            "radial-gradient(ellipse at 20% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%)",
+                            "radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)",
+                            "radial-gradient(ellipse at 40% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%)",
+                        ],
+                    }}
+                    transition={{
+                        duration: 10,
+                        repeat: Number.POSITIVE_INFINITY,
+                        repeatType: "reverse",
+                    }}
+                    className="absolute inset-0"
+                />
+            </div>
 
-            <div className="w-full max-w-xl space-y-6">
-                <div>
-                    <Label className="text-lg">WAV Audio File</Label>
-                    <Input
-                        type="file"
-                        accept="audio/wav"
-                        onChange={(e) =>
-                            setAudioFile(e.target.files?.[0] || null)
-                        }
-                    />
-                </div>
-
-                <div>
-                    <Label className="text-lg">File to Hide</Label>
-                    <Input
-                        type="file"
-                        onChange={(e) =>
-                            setTargetFile(e.target.files?.[0] || null)
-                        }
-                    />
-                </div>
-
-                <div>
-                    <Label className="text-lg">AES Key</Label>
-                    <Input
-                        type="text"
-                        value={key}
-                        onChange={(e) => setKey(e.target.value)}
-                    />
-                </div>
-
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-
-                <Button
-                    onClick={handleEmbed}
-                    disabled={loading}
-                    className="w-full mt-4"
-                >
-                    {loading ? (
-                        "Embedding..."
-                    ) : (
-                        <>
-                            <UploadCloud className="w-4 h-4 mr-2" /> Embed
-                        </>
-                    )}
-                </Button>
-
-                {result && (
-                    <div className="mt-6 space-y-4 p-4 rounded-lg bg-zinc-800 border border-zinc-700">
-                        <p className="text-green-400 font-semibold">
-                            ✅ Success!
-                        </p>
-                        <p>Used Bytes: {result.used_bytes}</p>
-                        <p>Max Capacity: {result.max_bytes}</p>
-                        <p>Remaining: {result.remaining}</p>
-                        <div className="flex flex-col gap-2 mt-4">
-                            <a
-                                href={`${process.env.NEXT_PUBLIC_API_URL}/${result.audio_file}`}
-                                target="_blank"
-                                className="text-blue-400 hover:underline"
-                                download
+            <div className="relative z-10 min-h-screen p-8">
+                <div className="max-w-4xl mx-auto">
+                    {/* Header */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="flex items-center gap-4 mb-8"
+                    >
+                        <Link href="/">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-gray-400 hover:text-white hover:bg-white/10"
                             >
-                                <ArrowDownCircle className="inline w-4 h-4 mr-1" />{" "}
-                                Download Encoded Audio
-                            </a>
-                            <a
-                                href={`${process.env.NEXT_PUBLIC_API_URL}/${result.qr_code}`}
-                                target="_blank"
-                                className="text-blue-400 hover:underline"
-                                download
-                            >
-                                <ArrowDownCircle className="inline w-4 h-4 mr-1" />{" "}
-                                Download QR Code
-                            </a>
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back
+                            </Button>
+                        </Link>
+                    </motion.div>
+
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        variants={containerVariants}
+                        className="space-y-8"
+                    >
+                        {/* Page Title */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="text-center space-y-4"
+                        >
+                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                                Embed Files
+                            </h1>
+                            <p className="text-xl text-white max-w-2xl mx-auto">
+                                Securely hide any file inside a WAV audio file
+                                with AES encryption
+                            </p>
+                            <motion.div
+                                className="h-1 w-16 mx-auto bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: 196 }}
+                                transition={{ delay: 0.5, duration: 0.8 }}
+                            />
+                        </motion.div>
+
+                        {/* File Upload Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FileUpload
+                                title="WAV Audio File"
+                                description="Select the audio file to embed data into"
+                                accept=".wav,audio/wav"
+                                icon={FileAudio}
+                                file={audioFile}
+                                onFileSelect={setAudioFile}
+                                gradient="from-emerald-500/20 to-teal-500/20"
+                            />
+
+                            <FileUpload
+                                title="Data File"
+                                description="Select any file to hide inside the audio"
+                                accept="*/*"
+                                icon={File}
+                                file={dataFile}
+                                onFileSelect={setDataFile}
+                                gradient="from-blue-500/20 to-cyan-500/20"
+                            />
                         </div>
-                    </div>
-                )}
+
+                        {/* Encryption Key */}
+                        <motion.div variants={itemVariants}>
+                            <Card className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-gray-600/50 transition-all duration-500 overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 transition-all duration-500" />
+
+                                <CardHeader className="relative">
+                                    <CardTitle className="flex items-center gap-3 text-white">
+                                        <motion.div
+                                            className="p-2 rounded-lg bg-white/10 backdrop-blur-sm"
+                                            whileHover={{ rotate: 16 }}
+                                            transition={{ duration: 0 }}
+                                        >
+                                            <Key className="h-5 w-5" />
+                                        </motion.div>
+                                        Encryption Key
+                                    </CardTitle>
+                                </CardHeader>
+
+                                <CardContent className="relative space-y-4">
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="encryption-key"
+                                            className="text-gray-300"
+                                        >
+                                            Enter a secure password for
+                                            encryption
+                                        </Label>
+                                        <Input
+                                            id="encryption-key"
+                                            type="password"
+                                            placeholder="Enter encryption key..."
+                                            value={encryptionKey}
+                                            onChange={(e) =>
+                                                setEncryptionKey(e.target.value)
+                                            }
+                                            className="bg-gray-800/50 border-gray-600/50 text-white placeholder:text-gray-500 focus:border-purple-400/50 focus:ring-purple-400/20"
+                                        />
+                                    </div>
+                                    <p className="text-sm text-gray-400">
+                                        This key will be required to extract the
+                                        embedded file. Keep it safe!
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+
+                        {/* Embed Button */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="flex justify-center pt-4"
+                        >
+                            <motion.div
+                                whileHover={{ scale: canEmbed ? 1.05 : 1 }}
+                                whileTap={{ scale: canEmbed ? 0.95 : 1 }}
+                            >
+                                <Button
+                                    onClick={handleEmbed}
+                                    disabled={!canEmbed || isProcessing}
+                                    className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
+                                        canEmbed
+                                            ? "bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white shadow-lg hover:shadow-emerald-500/25"
+                                            : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                                    }`}
+                                >
+                                    {isProcessing ? (
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{
+                                                duration: 1,
+                                                repeat: Number.POSITIVE_INFINITY,
+                                                ease: "linear",
+                                            }}
+                                            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"
+                                        />
+                                    ) : null}
+                                    {isProcessing
+                                        ? "Processing..."
+                                        : "Embed File"}
+                                </Button>
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+                </div>
             </div>
         </main>
     );

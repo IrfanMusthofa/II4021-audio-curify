@@ -44,7 +44,7 @@ const cardData = [
     },
     {
         path: "verify",
-        icon: Shield,
+        icon: QrCode,
         title: "Verify",
         description: "Compare the audio against QR code to ensure integrity.",
         gradient: "from-blue-500/20 to-cyan-500/20",
@@ -53,7 +53,7 @@ const cardData = [
     },
     {
         path: "extract",
-        icon: QrCode,
+        icon: Shield,
         title: "Extract",
         description: "Decrypt and recover the embedded file from audio.",
         gradient: "from-purple-500/20 to-pink-500/20",
