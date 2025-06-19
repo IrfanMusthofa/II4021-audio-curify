@@ -139,7 +139,7 @@ export default function Home() {
                                 }}
                                 className="group"
                             >
-                                <Card className="relative bg-gray-900/50 backdrop-blur-xl border-2 border-white-700/50 hover:border-gray-600/50 transition-all duration-500 overflow-hidden h-full">
+                                <Card className="relative bg-gray-900/50 hover:bg-white/10 backdrop-blur-xl border-2 border-white-700/50 hover:border-gray-600/50 transition-all duration-500 overflow-hidden h-full">
                                     {/* Card gradient overlay */}
                                     <div
                                         className={`absolute inset-0 bg-gradient-to-br ${card.gradient} ${card.hoverGradient} transition-all duration-500`}
@@ -152,9 +152,9 @@ export default function Home() {
                                         <CardContent className="relative p-8 flex flex-col items-start gap-6 h-full">
                                             {/* Icon */}
                                             <motion.div
-                                                className="p-3 rounded-xl bg-white/10 backdrop-blur-sm group-hover:bg-white/20 transition-all duration-300"
-                                                whileHover={{ rotate: 360 }}
-                                                transition={{ duration: 0.6 }}
+                                                className="p-3 rounded-xl bg-white/10 backdrop-blur-sm group-hover:bg-white/20 transition-all"
+                                                whileHover={{ rotate: 16 }}
+                                                transition={{ duration: 0 }}
                                             >
                                                 <card.icon className="h-8 w-8 text-white" />
                                             </motion.div>
