@@ -13,10 +13,9 @@ def hash_audio_file(file_path: str) -> str:
 def generate_qr_from_hash(audio_path: str, output_path: str):
     hash_val = hash_audio_file(audio_path)
 
-    # Use PIL image factory
     factory = qrcode.image.pil.PilImage
     qr = qrcode.make(hash_val, image_factory=factory)
-    qr.save(output_path)  # Now it's a proper PIL.Image.Image
+    qr.save(output_path) 
 
 def verify_audio_hash(audio_path: str, qr_path: str) -> bool:
     audio_hash = hash_audio_file(audio_path)

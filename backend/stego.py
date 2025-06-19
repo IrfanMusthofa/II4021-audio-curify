@@ -35,3 +35,9 @@ def extract_from_audio(audio_path: str) -> bytes:
 
     message = ''.join(chars[:-3])
     return base64.b64decode(message)
+
+def get_max_capacity(audio_path: str) -> int:
+    with wave.open(audio_path, 'rb') as audio:
+        frames = audio.readframes(audio.getnframes())
+    samples = len(frames) // 2  # 2 byte per sample (16-bit)
+    return samples // 8         # 8 bits per byte
