@@ -1,23 +1,16 @@
+// app/extract/page.tsx
 "use client";
 
-import type React from "react";
 import axios from "axios";
 import Link from "next/link";
+import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, FileAudio, Key, Upload, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Upload,
-    FileAudio,
-    File as FileIcon,
-    Key,
-    ArrowLeft,
-    Check,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import { useState, useCallback } from "react";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -103,27 +96,24 @@ function FileUpload({
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 300 }}
         >
-            <Card className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-gray-600/50 transition-all duration-500 overflow-hidden">
+            <Card className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-gray-600/50 overflow-hidden">
                 <div
                     className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all duration-500`}
                 />
-
                 <CardHeader className="relative">
                     <CardTitle className="flex items-center gap-3 text-white">
                         <motion.div
                             className="p-2 rounded-lg bg-white/10 backdrop-blur-sm"
                             whileHover={{ rotate: 16 }}
-                            transition={{ duration: 0 }}
                         >
                             <Icon className="h-5 w-5" />
                         </motion.div>
                         {title}
                     </CardTitle>
                 </CardHeader>
-
                 <CardContent className="relative space-y-4">
                     <div
-                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer group ${
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer group ${
                             isDragOver
                                 ? "border-emerald-400/50 bg-emerald-500/10"
                                 : file
@@ -144,36 +134,21 @@ function FileUpload({
                             onChange={handleFileSelect}
                             className="hidden"
                         />
-
                         <motion.div
                             animate={{
                                 scale: isDragOver ? 1.1 : 1,
                                 rotate: isDragOver ? 5 : 0,
                             }}
-                            transition={{ type: "spring", stiffness: 300 }}
                             className="space-y-4"
                         >
                             {file ? (
-                                <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="flex items-center justify-center"
-                                >
-                                    <Check className="h-12 w-12 text-green-400" />
-                                </motion.div>
+                                <Check className="h-12 w-12 text-green-400 mx-auto" />
                             ) : (
-                                <Upload
-                                    className={`h-12 w-12 mx-auto transition-colors ${
-                                        isDragOver
-                                            ? "text-emerald-400"
-                                            : "text-gray-400 group-hover:text-gray-300"
-                                    }`}
-                                />
+                                <Upload className="h-12 w-12 mx-auto text-gray-400" />
                             )}
-
                             <div>
                                 <p
-                                    className={`font-medium truncate transition-colors ${
+                                    className={`font-medium truncate ${
                                         file ? "text-green-400" : "text-white"
                                     }`}
                                 >
@@ -191,7 +166,6 @@ function FileUpload({
                             </div>
                         </motion.div>
                     </div>
-
                     {file && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
@@ -220,86 +194,53 @@ function FileUpload({
     );
 }
 
-export default function EmbedPage() {
+export default function ExtractPage() {
     const [audioFile, setAudioFile] = useState<File | null>(null);
-    const [dataFile, setDataFile] = useState<File | null>(null);
-    const [encryptionKey, setEncryptionKey] = useState("");
+    const [key, setKey] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleEmbed = async () => {
-        if (!audioFile || !dataFile || !encryptionKey) {
-            return;
-        }
+    const handleExtract = async () => {
+        if (!audioFile || !key) return;
 
         setIsProcessing(true);
+        const formData = new FormData();
+        formData.append("key", key);
+        formData.append("audio", audioFile);
 
         try {
-            // Step 1: Kirim ke /embed/audio
-            const formData = new FormData();
-            formData.append("file", dataFile);
-            formData.append("audio", audioFile);
-            formData.append("key", encryptionKey);
-
-            const audioRes = await axios.post(
-                "http://localhost:8000/embed/audio",
+            const res = await axios.post(
+                "http://localhost:8000/extract",
                 formData,
                 {
                     responseType: "blob",
                 }
             );
 
-            const embeddedAudio = new File(
-                [audioRes.data],
-                `embedded_${audioFile.name}`,
-                {
-                    type: "audio/wav",
-                }
-            );
+            const contentDisposition = res.headers["content-disposition"];
+            const match = contentDisposition?.match(/filename="?(.+?)"?$/);
+            const filename = match ? match[1] : "extracted_file";
 
-            // Step 2: Kirim ke /embed/qr
-            const qrForm = new FormData();
-            qrForm.append("audio", embeddedAudio);
-
-            const qrRes = await axios.post(
-                "http://localhost:8000/embed/qr",
-                qrForm,
-                {
-                    responseType: "blob",
-                }
-            );
-            const baseName = audioFile.name.replace(/\.wav$/i, "");
-            const qrImage = new File([qrRes.data], `qr_${baseName}.png`, {
-                type: "image/png",
-            });
-
-            // Step 3: Unduh otomatis
-            const download = (blob: Blob, filename: string) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            };
-
-            download(embeddedAudio, embeddedAudio.name);
-            download(qrImage, qrImage.name);
+            const blob = new Blob([res.data]);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
         } catch (err) {
-            console.error("Embedding failed:", err);
+            alert("Extraction failed: Invalid key or corrupted file.");
+            console.error(err);
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const canEmbed = audioFile && dataFile && encryptionKey.length > 0;
+    const canExtract = audioFile && key.length > 0;
 
     return (
         <main className="relative min-h-screen bg-black text-white overflow-hidden">
-            {/* Gradient background */}
-
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-950" />
+            {/* Background gradient layers */}
+            <div className="absolute inset-0 -z-20 bg-gradient-to-br from-slate-950 via-black to-slate-950" />
             <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-blue-500/10" />
             <div className="absolute inset-0 bg-gradient-to-bl from-purple-500/5 via-transparent to-pink-500/10" />
             <motion.div
@@ -320,7 +261,7 @@ export default function EmbedPage() {
 
             <div className="relative z-10 min-h-screen p-8">
                 <div className="max-w-4xl mx-auto">
-                    {/* Header */}
+                    {/* Back Button */}
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -350,12 +291,12 @@ export default function EmbedPage() {
                             variants={itemVariants}
                             className="text-center space-y-4"
                         >
-                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                                Embed Files
+                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+                                Extract File
                             </h1>
                             <p className="text-xl text-white max-w-2xl mx-auto">
-                                Securely hide any file inside a WAV audio file
-                                with AES encryption
+                                Upload a steganographed WAV file and enter the
+                                encryption key to extract the hidden data.
                             </p>
                             <motion.div
                                 className="h-1 w-16 mx-auto bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full"
@@ -365,108 +306,72 @@ export default function EmbedPage() {
                             />
                         </motion.div>
 
-                        {/* File Upload Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FileUpload
-                                title="WAV Audio File"
-                                description="Select the audio file to embed data into"
-                                accept=".wav,audio/wav"
-                                icon={FileAudio}
-                                file={audioFile}
-                                onFileSelect={setAudioFile}
-                                gradient="from-emerald-500/20 to-teal-500/20"
-                            />
+                        {/* Upload & Key Input */}
+                        <FileUpload
+                            title="Embedded WAV File"
+                            description="Select the embedded audio file (.wav)"
+                            accept=".wav,audio/wav"
+                            icon={FileAudio}
+                            file={audioFile}
+                            onFileSelect={setAudioFile}
+                            gradient="from-purple-500/20 to-pink-500/20"
+                        />
 
-                            <FileUpload
-                                title="Data File"
-                                description="Select any file to hide inside the audio"
-                                accept="*/*"
-                                icon={FileIcon}
-                                file={dataFile}
-                                onFileSelect={setDataFile}
-                                gradient="from-blue-500/20 to-cyan-500/20"
-                            />
-                        </div>
-
-                        {/* Encryption Key */}
                         <motion.div variants={itemVariants}>
-                            <Card className="relative bg-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-gray-600/50 transition-all duration-500 overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 transition-all duration-500" />
-
+                            <Card className="relative bg-gray-900/50 border border-gray-700/50 backdrop-blur-xl overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20" />
                                 <CardHeader className="relative">
                                     <CardTitle className="flex items-center gap-3 text-white">
                                         <motion.div
                                             className="p-2 rounded-lg bg-white/10 backdrop-blur-sm"
                                             whileHover={{ rotate: 16 }}
-                                            transition={{ duration: 0 }}
                                         >
                                             <Key className="h-5 w-5" />
                                         </motion.div>
                                         Encryption Key
                                     </CardTitle>
                                 </CardHeader>
-
                                 <CardContent className="relative space-y-4">
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="encryption-key"
-                                            className="text-gray-300"
-                                        >
-                                            Enter a secure password for
-                                            encryption
-                                        </Label>
-                                        <Input
-                                            id="encryption-key"
-                                            type="password"
-                                            placeholder="Enter encryption key..."
-                                            value={encryptionKey}
-                                            onChange={(e) =>
-                                                setEncryptionKey(e.target.value)
-                                            }
-                                            className="bg-gray-800/50 border-gray-600/50 text-white placeholder:text-gray-500 focus:border-purple-400/50 focus:ring-purple-400/20"
-                                        />
-                                    </div>
-                                    <p className="text-sm text-gray-400">
-                                        This key will be required to extract the
-                                        embedded file. Don't worry, we will hash
-                                        it first using AES-256. Keep it safe!
-                                    </p>
+                                    <Label
+                                        htmlFor="key"
+                                        className="text-gray-300"
+                                    >
+                                        Enter the password used to encrypt the
+                                        file
+                                    </Label>
+                                    <Input
+                                        id="key"
+                                        type="password"
+                                        value={key}
+                                        onChange={(e) => setKey(e.target.value)}
+                                        className="bg-gray-800/50 text-white mt-2"
+                                        placeholder="Enter encryption key..."
+                                    />
                                 </CardContent>
                             </Card>
                         </motion.div>
 
-                        {/* Embed Button */}
+                        {/* Extract Button */}
                         <motion.div
                             variants={itemVariants}
                             className="flex justify-center pt-4"
                         >
                             <motion.div
-                                whileHover={{ scale: canEmbed ? 1.05 : 1 }}
-                                whileTap={{ scale: canEmbed ? 0.95 : 1 }}
+                                whileHover={{ scale: canExtract ? 1.05 : 1 }}
+                                whileTap={{ scale: canExtract ? 0.95 : 1 }}
                             >
                                 <Button
-                                    onClick={handleEmbed}
-                                    disabled={!canEmbed || isProcessing}
+                                    onClick={handleExtract}
+                                    disabled={!canExtract || isProcessing}
                                     className={`px-8 py-3 text-lg font-semibold transition-all duration-300 ${
-                                        canEmbed
-                                            ? "bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white shadow-lg hover:shadow-emerald-500/25"
+                                        canExtract
+                                            ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
                                             : "bg-gray-700 text-gray-400 cursor-not-allowed"
                                     }`}
                                 >
-                                    {isProcessing ? (
-                                        <motion.div
-                                            animate={{ rotate: 360 }}
-                                            transition={{
-                                                duration: 1,
-                                                repeat: Number.POSITIVE_INFINITY,
-                                                ease: "linear",
-                                            }}
-                                            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"
-                                        />
-                                    ) : null}
                                     {isProcessing
-                                        ? "Processing..."
-                                        : "Embed File"}
+                                        ? "Extracting..."
+                                        : "Extract File"}
                                 </Button>
                             </motion.div>
                         </motion.div>

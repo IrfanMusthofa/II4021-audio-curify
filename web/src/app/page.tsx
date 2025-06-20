@@ -62,7 +62,7 @@ const cardData = [
     },
 ];
 
-export default function Home() {
+export default function HomePage() {
     return (
         <main className="relative min-h-screen bg-linear-to-br from-emerald-400/10 via-blue-400/10 to-purple-400/10 text-white overflow-hidden">
             {/* Animated background layers */}
