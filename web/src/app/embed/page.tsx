@@ -438,7 +438,7 @@ export default function EmbedPage() {
                         {/* Embed Button */}
                         <motion.div
                             variants={itemVariants}
-                            className="flex justify-center pt-4"
+                            className="flex justify-center flex-col items-center pt-4"
                         >
                             <motion.div
                                 whileHover={{ scale: canEmbed ? 1.05 : 1 }}
@@ -469,6 +469,16 @@ export default function EmbedPage() {
                                         : "Embed File"}
                                 </Button>
                             </motion.div>
+                            <div className="mt-4 text-white justify-center text-sm">
+                                <h1 className="font-semibold justify-center items-center">
+                                    If it's too long, just wait a bit (up to 1
+                                    minute) for the embedding to finish.
+                                    <br />
+                                    If the loading has stopped, refresh and try
+                                    again. Sorry for the inconvenience due to
+                                    the free weak server :'(
+                                </h1>
+                            </div>
                         </motion.div>
                     </motion.div>
                 </div>

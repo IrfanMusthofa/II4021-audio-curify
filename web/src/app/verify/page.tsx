@@ -363,6 +363,16 @@ export default function VerifyPage() {
                                 )}
                             </motion.div>
                         )}
+                        <div className="mt-4 text-white justify-center text-sm">
+                            <h1 className="font-semibold justify-center items-center">
+                                If it's too long, just wait a bit (up to 1
+                                minute) for the embedding to finish.
+                                <br />
+                                If the loading has stopped, refresh and try
+                                again. Sorry for the inconvenience due to the
+                                free weak server :'(
+                            </h1>
+                        </div>
                     </motion.div>
                 </div>
             </div>

@@ -192,6 +192,75 @@ export default function HomePage() {
                             </motion.div>
                         ))}
                     </motion.div>
+                    {/* Download Sample Section */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="w-full max-w-4xl text-center mt-2 space-y-4"
+                    >
+                        <h3 className="text-2xl font-semibold text-white">
+                            Try Sample Files
+                        </h3>
+                        <p className="text-gray-400 text-base">
+                            Download the sample audio, embedded file, and hidden
+                            file for testing.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                            <a
+                                href="/audio_sample.wav"
+                                download
+                                className="block"
+                            >
+                                <Button
+                                    variant="secondary"
+                                    className="w-full bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30 text-white backdrop-blur-sm transition-all duration-300"
+                                >
+                                    Download Audio Sample
+                                </Button>
+                            </a>
+                            <a
+                                href="/to_hide_sample.png"
+                                download
+                                className="block"
+                            >
+                                <Button
+                                    variant="secondary"
+                                    className="w-full bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30 text-white backdrop-blur-sm transition-all duration-300"
+                                >
+                                    Download File to Hide
+                                </Button>
+                            </a>
+                            <a
+                                href="/embedded_sample.wav"
+                                download
+                                className="block"
+                            >
+                                <Button
+                                    variant="secondary"
+                                    className="w-full bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30 text-white backdrop-blur-sm transition-all duration-300"
+                                >
+                                    Download Embedded Audio
+                                </Button>
+                            </a>
+                            <a href="/qr_sample.png" download className="block">
+                                <Button
+                                    variant="secondary"
+                                    className="w-full bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30 text-white backdrop-blur-sm transition-all duration-300"
+                                >
+                                    Download QR Sample
+                                </Button>
+                            </a>
+                        </div>
+
+                        <div className="mt-4 text-white text-sm">
+                            <span className="font-semibold">
+                                Key for Embedded Audio:
+                            </span>{" "}
+                            <code className="bg-white/10 px-2 py-1 rounded">
+                                qwerty
+                            </code>
+                        </div>
+                    </motion.div>
 
                     {/* Bottom accent */}
                     <motion.div
@@ -201,6 +270,7 @@ export default function HomePage() {
                         className="flex items-center gap-2 text-gray-500 text-sm mt-8"
                     >
                         <div className="w-4 h-4 bg-emerald-400 rounded-full animate-pulse" />
+
                         <span className="text-lg text-white">
                             Secure • Private • Open Source
                         </span>
