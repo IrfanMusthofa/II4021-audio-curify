@@ -429,7 +429,7 @@ export default function EmbedPage() {
                                     <p className="text-sm text-gray-400">
                                         This key will be required to extract the
                                         embedded file. Don't worry, we will hash
-                                        it first using AES-256. Keep it safe!
+                                        it first using SHA-256. Keep it safe!
                                     </p>
                                 </CardContent>
                             </Card>
