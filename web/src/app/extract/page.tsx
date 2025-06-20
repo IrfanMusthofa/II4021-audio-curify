@@ -209,7 +209,7 @@ export default function ExtractPage() {
 
         try {
             const res = await axios.post(
-                "http://localhost:8000/extract",
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/extract`,
                 formData,
                 {
                     responseType: "blob",

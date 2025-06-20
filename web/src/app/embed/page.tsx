@@ -241,7 +241,7 @@ export default function EmbedPage() {
             formData.append("key", encryptionKey);
 
             const audioRes = await axios.post(
-                "http://localhost:8000/embed/audio",
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/embed/audio`,
                 formData,
                 {
                     responseType: "blob",
@@ -261,7 +261,7 @@ export default function EmbedPage() {
             qrForm.append("audio", embeddedAudio);
 
             const qrRes = await axios.post(
-                "http://localhost:8000/embed/qr",
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/embed/qr`,
                 qrForm,
                 {
                     responseType: "blob",

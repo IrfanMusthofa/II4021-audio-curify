@@ -217,7 +217,7 @@ export default function VerifyPage() {
             formData.append("qr", qrFile);
 
             const res = await axios.post(
-                "http://localhost:8000/verify",
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/verify`,
                 formData
             );
             setVerified(res.data.valid);
