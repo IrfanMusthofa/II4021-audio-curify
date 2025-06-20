@@ -49,8 +49,8 @@ interface FileUploadProps {
     description: string;
     accept: string;
     icon: React.ElementType;
-    file: FileIcon | null;
-    onFileSelect: (file: FileIcon | null) => void;
+    file: File | null;
+    onFileSelect: (file: File | null) => void;
     gradient: string;
 }
 
@@ -267,8 +267,8 @@ export default function EmbedPage() {
                     responseType: "blob",
                 }
             );
-
-            const qrImage = new File([qrRes.data], `qr_${audioFile.name}.png`, {
+            const baseName = audioFile.name.replace(/\.wav$/i, "");
+            const qrImage = new File([qrRes.data], `qr_${baseName}.png`, {
                 type: "image/png",
             });
 
