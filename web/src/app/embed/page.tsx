@@ -6,9 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileAudio, File, Key, ArrowLeft, Check } from "lucide-react";
+import {
+    Upload,
+    FileAudio,
+    File as FileIcon,
+    Key,
+    ArrowLeft,
+    Check,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useCallback } from "react";
+import axios from "axios";
 import Link from "next/link";
 
 const containerVariants = {
@@ -41,8 +49,8 @@ interface FileUploadProps {
     description: string;
     accept: string;
     icon: React.ElementType;
-    file: File | null;
-    onFileSelect: (file: File | null) => void;
+    file: FileIcon | null;
+    onFileSelect: (file: FileIcon | null) => void;
     gradient: string;
 }
 
@@ -224,9 +232,65 @@ export default function EmbedPage() {
         }
 
         setIsProcessing(true);
-        // Simulate processing
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setIsProcessing(false);
+
+        try {
+            // Step 1: Kirim ke /embed/audio
+            const formData = new FormData();
+            formData.append("file", dataFile);
+            formData.append("audio", audioFile);
+            formData.append("key", encryptionKey);
+
+            const audioRes = await axios.post(
+                "http://localhost:8000/embed/audio",
+                formData,
+                {
+                    responseType: "blob",
+                }
+            );
+
+            const embeddedAudio = new File(
+                [audioRes.data],
+                `embedded_${audioFile.name}`,
+                {
+                    type: "audio/wav",
+                }
+            );
+
+            // Step 2: Kirim ke /embed/qr
+            const qrForm = new FormData();
+            qrForm.append("audio", embeddedAudio);
+
+            const qrRes = await axios.post(
+                "http://localhost:8000/embed/qr",
+                qrForm,
+                {
+                    responseType: "blob",
+                }
+            );
+
+            const qrImage = new File([qrRes.data], `qr_${audioFile.name}.png`, {
+                type: "image/png",
+            });
+
+            // Step 3: Unduh otomatis
+            const download = (blob: Blob, filename: string) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            download(embeddedAudio, embeddedAudio.name);
+            download(qrImage, qrImage.name);
+        } catch (err) {
+            console.error("Embedding failed:", err);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const canEmbed = audioFile && dataFile && encryptionKey.length > 0;
@@ -318,7 +382,7 @@ export default function EmbedPage() {
                                 title="Data File"
                                 description="Select any file to hide inside the audio"
                                 accept="*/*"
-                                icon={File}
+                                icon={FileIcon}
                                 file={dataFile}
                                 onFileSelect={setDataFile}
                                 gradient="from-blue-500/20 to-cyan-500/20"
