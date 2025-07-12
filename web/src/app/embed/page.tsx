@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useCallback } from "react";
+import { Variants } from "framer-motion";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -30,16 +31,16 @@ const containerVariants = {
     },
 };
 
-const itemVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: {
         opacity: 1,
         y: 0,
         scale: 1,
         transition: {
             type: "spring",
-            stiffness: 120,
-            damping: 20,
+            stiffness: 300,
+            damping: 30,
         },
     },
 };
